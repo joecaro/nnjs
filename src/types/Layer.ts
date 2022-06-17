@@ -1,7 +1,7 @@
 import ActivationFunction from "./ActivationFunction";
 import activationFunctions, {
   activationFunctionsType,
-} from "../activationFunctions";
+} from "../functions/activationFunctions";
 import Node from "./Node";
 
 export default class Layer {

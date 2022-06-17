@@ -1,4 +1,4 @@
-import ActivationFunction from "./types/ActivationFunction";
+import ActivationFunction from "../types/ActivationFunction";
 
 const activationFunctions: activationFunctionsType = {
   relu: (value: number) => Math.max(0, value),

@@ -1,6 +1,6 @@
 import activationFunctions, {
   activationFunctionsType,
-} from "./activationFunctions";
+} from "./functions/activationFunctions";
 import Layer from "./types/Layer";
 
 export class NN {
