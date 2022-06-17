@@ -28,14 +28,19 @@ test("should init with activation function", () => {
   expect(layer.activationFunction(1)).toBe(1);
 });
 
+test("should randomize weights and biases", () => {
+  expect(true).toBeTruthy();
+});
+
 test("should feed foward", () => {
   let prevInputs = [{ value: 1, error: 0 }];
   let layer = new Layer(1, prevInputs.length, "relu");
 
   layer.weights = [[0.5]];
+  layer.biases[0] = 1;
   layer.feedForward(prevInputs);
 
-  expect(layer.nodes[0].value).toBe(0.5);
+  expect(layer.nodes[0].value).toBe(1.5);
 });
 
 test("should back propogate", () => {
