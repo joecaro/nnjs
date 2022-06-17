@@ -70,4 +70,30 @@ export default class Layer {
   toArray = () => {
     return this.nodes.map((node) => node.value);
   };
+
+  calculateError(compareObj: number[]) {
+    if (Array.isArray(compareObj)) {
+      this.nodes.forEach((node, idx) => {
+        node.error = compareObj[idx] - node.value;
+      });
+    }
+  }
+
+  calculateHiddenError(compareObj: Layer) {
+    // for each node
+    this.nodes.forEach((node, i) => {
+      let err = 0;
+
+      // loop through the weights to the next layer
+      compareObj.weights.forEach((arr, j) => {
+        // find the relative weight compared to the whole array
+        let errorWeight = arr[i] / arr.reduce((a, v) => a + v, 0);
+
+        // add the weighted error of this node
+        err += errorWeight * compareObj.nodes[j].error;
+      });
+
+      node.error = err;
+    });
+  }
 }

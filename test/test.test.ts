@@ -34,6 +34,17 @@ test("NN feeds forward", () => {
   expect(nn.error).toBe(0.2689414213699951);
 });
 
+test("NN calculates node errors on feed forward", () => {
+  const nn = new NN(1, 1);
+
+  nn.outputLayer.weights = [[1]];
+  let inputs = [1];
+  nn.feedForward(inputs, [1]);
+
+  expect(nn.outputLayer.nodes[0].value).toBe(0.7310585786300049);
+  expect(nn.error).toBe(0.2689414213699951);
+});
+
 test("NN calculates loss", () => {
   const nn = new NN(1, 1);
 

@@ -87,7 +87,13 @@ export class NN {
 
     this.calculateLoss(this.outputLayer.toArray(), expectedValues);
 
-    logging ? console.table(this.outputLayer.nodes) : "";
+    this.outputLayer.calculateError(expectedValues);
+
+    if (logging) {
+      console.log("Output Layer");
+      console.table(this.outputLayer.nodes);
+      console.log("-----------------------");
+    }
   }
 
   log = () => {
