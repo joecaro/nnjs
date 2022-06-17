@@ -26,17 +26,12 @@ test("NN adds multiple hidden layers", () => {
 test("NN feeds forward", () => {
   const nn = new NN(1, 1);
 
-  nn.addHiddenLayer(1, "relu");
-  nn.addHiddenLayer(1, "relu");
-
-  nn.hiddenLayers[0].weights = [[1]];
-  nn.hiddenLayers[1].weights = [[0.5]];
   nn.outputLayer.weights = [[1]];
   let inputs = [1];
   nn.feedForward(inputs, [1]);
 
-  expect(nn.outputLayer.nodes[0].value).toBe(0.5);
-  expect(nn.error).toBe(0.5);
+  expect(nn.outputLayer.nodes[0].value).toBe(0.7310585786300049);
+  expect(nn.error).toBe(0.2689414213699951);
 });
 
 test("NN calculates loss", () => {

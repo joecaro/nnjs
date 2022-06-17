@@ -45,6 +45,13 @@ export class NN {
     else return this.hiddenLayers[this.hiddenLayers.length - 1].nodes.length;
   };
 
+  randomizeWeights = () => {
+    this.hiddenLayers.forEach((layer) => {
+      layer.randomizeWeights();
+    });
+    this.outputLayer.randomizeWeights();
+  };
+
   calculateLoss = (outputs: number[], expectedValues: number[]) => {
     this.error = this.lossFunction(outputs, expectedValues);
   };
@@ -73,7 +80,9 @@ export class NN {
 
     //feed forward to outputs
     this.outputLayer.feedForward(
-      this.hiddenLayers[this.hiddenLayers.length - 1].nodes
+      this.hiddenLayers.length !== 0
+        ? this.hiddenLayers[this.hiddenLayers.length - 1].nodes
+        : inputNodes
     );
 
     this.calculateLoss(this.outputLayer.toArray(), expectedValues);
