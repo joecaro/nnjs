@@ -17,7 +17,9 @@ export default class Layer {
     previousNumberOfNodes: number = 0,
     activationFunction: keyof activationFunctionsType
   ) {
-    this.nodes = new Array(numberOfNodes).fill({ value: 0, error: 0 });
+    this.nodes = new Array(numberOfNodes)
+      .fill(0)
+      .map(() => ({ value: 0, error: 0 }));
     this.previousLayerNodeAmount = previousNumberOfNodes;
     this.activationFunction = activationFunctions[activationFunction];
     this.weights = this.generateWeights();
@@ -26,23 +28,23 @@ export default class Layer {
   }
 
   generateWeights = () => {
-    return new Array(this.nodes.length).fill(
-      new Array(this.previousLayerNodeAmount).fill(0)
-    );
+    return new Array(this.nodes.length)
+      .fill(0)
+      .map(() => new Array(this.previousLayerNodeAmount).fill(0).map(() => 0));
   };
 
   updateWeights = (numberOfPrevNodes: number) => {
-    this.weights = new Array(this.nodes.length).fill(
-      new Array(numberOfPrevNodes).fill(0)
-    );
+    this.weights = new Array(this.nodes.length)
+      .fill(0)
+      .map(() => new Array(numberOfPrevNodes).fill(0).map(() => 0));
   };
 
   randomizeWeights = () => {
-    this.weights.forEach((arr) => {
-      for (let i = 0; i < arr.length; i++) {
-        arr[i] = Math.random();
+    for (let i = 0; i < this.weights.length; i++) {
+      for (let j = 0; j < this.weights[i].length; j++) {
+        this.weights[i][j] = Math.random();
       }
-    });
+    }
 
     for (let i = 0; i < this.biases.length; i++) {
       this.biases[i] = Math.random();
@@ -61,7 +63,6 @@ export default class Layer {
       let activationValue = this.activationFunction(
         weightedValue + this.biases[index]
       );
-
       node.value = activationValue;
     });
   };
