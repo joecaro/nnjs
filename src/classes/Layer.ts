@@ -1,8 +1,8 @@
-import ActivationFunction from "./ActivationFunction";
+import ActivationFunction from "../types/ActivationFunction";
 import activationFunctions, {
   activationFunctionsType,
 } from "../functions/activationFunctions";
-import Node from "./Node";
+import Node from "../types/Node";
 
 export default class Layer {
   nodes: Node[];
@@ -23,7 +23,7 @@ export default class Layer {
 
   generateRandomWeights = () => {
     return new Array(this.nodes.length).fill(
-      new Array(this.previousLayerNodeAmount).fill(0)
+      new Array(this.previousLayerNodeAmount).fill(Math.random)
     );
   };
 

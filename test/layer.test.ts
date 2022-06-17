@@ -1,4 +1,4 @@
-import Layer from "../src/types/Layer";
+import Layer from "../src/classes/Layer";
 
 test("should init new layer with nodes and weights", () => {
   let layer = new Layer(5, 5, "relu");

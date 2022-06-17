@@ -1,4 +1,4 @@
-import { NN } from "../src/index";
+import NN from "../src/index";
 
 test("NN inits with inputs/outpus", () => {
   const nn = new NN(5, 5);

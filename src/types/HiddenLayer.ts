@@ -1,3 +1,3 @@
-import Layer from "./Layer";
+import Layer from "../classes/Layer";
 
 export default interface HiddenLayer extends Layer {}
