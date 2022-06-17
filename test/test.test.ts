@@ -34,10 +34,14 @@ test("NN feeds forward", () => {
 
   expect(nn.outputLayer.nodes[0].value).toBe(0.5);
 });
-// test("NN sets loss function", () => {
-//   const nn = new NN(5, 5);
+test("NN logs", () => {
+  const nn = new NN(5, 5);
 
-//   nn.addHiddenLayer(1, "relu");
+  nn.addHiddenLayer(5, "relu");
 
-//   expect(nn.hiddenLayers.length).toBe(1);
-// });
+  let message = nn.log();
+
+  expect(message).toBe(
+    `-----\nlayers:\n Inputs: 5\n Hidden Layer 1: 5\n Outputs: 5\n------`
+  );
+});
