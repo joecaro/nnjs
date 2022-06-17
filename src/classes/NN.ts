@@ -23,20 +23,21 @@ export class NN {
   ) {
     this.numberOfInputs = numberOfInputs;
     this.numberOfOutputs = numberOfOutputs;
-    this.outputLayer = new Layer(numberOfOutputs, numberOfInputs, "relu");
+    this.outputLayer = new Layer(numberOfOutputs, numberOfInputs, "sigmoid");
     this.lossFunction = this.lossFunctions[lossFunction];
   }
 
   addHiddenLayer = (
     numberOfNodes: number,
-    activationFunction: keyof activationFunctionsType
+    activationFunction: keyof activationFunctionsType = "relu"
   ) => {
     let newLayer = new Layer(
       numberOfNodes,
       this.prevNumberOfNodes(),
-      (activationFunction = "relu")
+      activationFunction
     );
     this.hiddenLayers.push(newLayer);
+    this.outputLayer.updateWeights(numberOfNodes);
   };
 
   prevNumberOfNodes = (): number => {
@@ -48,7 +49,11 @@ export class NN {
     this.error = this.lossFunction(outputs, expectedValues);
   };
 
-  feedForward(inputs: number[], expectedValues: number[]) {
+  feedForward(
+    inputs: number[],
+    expectedValues: number[],
+    logging: boolean = false
+  ) {
     // check if we were given correct amount of inputs/outputs
     if (
       inputs.length !== this.numberOfInputs ||
@@ -72,6 +77,8 @@ export class NN {
     );
 
     this.calculateLoss(this.outputLayer.toArray(), expectedValues);
+
+    logging ? console.table(this.outputLayer.nodes) : "";
   }
 
   log = () => {

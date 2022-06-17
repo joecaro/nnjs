@@ -9,6 +9,7 @@ export default class Layer {
   activationFunction: ActivationFunction;
   weights: number[][];
   biases: number[];
+  gradients: number[];
   previousLayerNodeAmount: number;
 
   constructor(
@@ -21,11 +22,18 @@ export default class Layer {
     this.activationFunction = activationFunctions[activationFunction];
     this.weights = this.generateWeights();
     this.biases = new Array(numberOfNodes).fill(0);
+    this.gradients = new Array(numberOfNodes).fill(0);
   }
 
   generateWeights = () => {
     return new Array(this.nodes.length).fill(
       new Array(this.previousLayerNodeAmount).fill(0)
+    );
+  };
+
+  updateWeights = (numberOfPrevNodes: number) => {
+    this.weights = new Array(this.nodes.length).fill(
+      new Array(numberOfPrevNodes).fill(0)
     );
   };
 
