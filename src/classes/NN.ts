@@ -44,7 +44,7 @@ export class NN {
       throw Error("number of inputs or outputs does not match required amount");
     }
 
-    // formate input values
+    // format input values
     let inputNodes = inputs.map((input) => ({ value: input, error: 0 }));
 
     // feed forward through hidden layers
@@ -60,14 +60,15 @@ export class NN {
   }
 
   log = () => {
-    let message = `-----\nlayers:\n  Inputs: ${this.numberOfInputs}`;
+    let message = `-----\nlayers:\n Inputs: ${this.numberOfInputs}`;
 
     this.hiddenLayers.forEach((layer, idx) => {
-      message += `\n  Hidden Layer ${idx + 1}: ${layer.nodes.length}`;
+      message += `\n Hidden Layer ${idx + 1}: ${layer.nodes.length}`;
     });
 
     message += `\n Outputs: ${this.numberOfOutputs}\n------`;
 
     console.log(message);
+    return message;
   };
 }
