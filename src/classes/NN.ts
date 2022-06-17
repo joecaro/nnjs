@@ -4,6 +4,7 @@ import activationFunctions, {
 import lossFunctions, { lossFunctionsType } from "../functions/lossFunctions";
 import Layer from "../classes/Layer";
 import LossFunction from "../types/LossFunction";
+import OutputLayer from "./OutputLayer";
 
 export class NN {
   activationFunctions = activationFunctions;
@@ -12,7 +13,7 @@ export class NN {
   numberOfInputs: number;
   hiddenLayers: Layer[] = [];
   numberOfOutputs: number;
-  outputLayer: Layer;
+  outputLayer: OutputLayer;
 
   lossFunction: LossFunction;
   error: number = 0;
@@ -23,7 +24,7 @@ export class NN {
   ) {
     this.numberOfInputs = numberOfInputs;
     this.numberOfOutputs = numberOfOutputs;
-    this.outputLayer = new Layer(numberOfOutputs, numberOfInputs, "sigmoid");
+    this.outputLayer = new OutputLayer(numberOfOutputs, numberOfInputs);
     this.lossFunction = this.lossFunctions[lossFunction];
   }
 

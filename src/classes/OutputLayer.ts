@@ -4,18 +4,16 @@ import activationFunctions, {
 } from "../functions/activationFunctions";
 import Node from "../types/Node";
 
-export default class Layer {
+export default class OutputLayer {
   nodes: Node[];
   activationFunction: ActivationFunction;
   weights: number[][];
-  biases: number[];
-  gradients: number[];
   previousLayerNodeAmount: number;
 
   constructor(
     numberOfNodes: number,
     previousNumberOfNodes: number = 0,
-    activationFunction: keyof activationFunctionsType
+    activationFunction: keyof activationFunctionsType = "sigmoid"
   ) {
     this.nodes = new Array(numberOfNodes)
       .fill(0)
@@ -23,8 +21,6 @@ export default class Layer {
     this.previousLayerNodeAmount = previousNumberOfNodes;
     this.activationFunction = activationFunctions[activationFunction];
     this.weights = this.generateWeights();
-    this.biases = new Array(numberOfNodes).fill(0);
-    this.gradients = new Array(numberOfNodes).fill(0);
   }
 
   generateWeights = () => {
@@ -45,10 +41,6 @@ export default class Layer {
         this.weights[i][j] = Math.random();
       }
     }
-
-    for (let i = 0; i < this.biases.length; i++) {
-      this.biases[i] = Math.random();
-    }
   };
 
   feedForward = (inputs: Node[]) => {
@@ -60,9 +52,7 @@ export default class Layer {
         (a, v, idx) => v.value * weights[idx] + a,
         0
       );
-      let activationValue = this.activationFunction(
-        weightedValue + this.biases[index]
-      );
+      let activationValue = this.activationFunction(weightedValue);
       node.value = activationValue;
     });
   };
@@ -71,21 +61,11 @@ export default class Layer {
     return this.nodes.map((node) => node.value);
   };
 
-  calculateError(compareObj: Layer) {
-    // for each node
-    this.nodes.forEach((node, i) => {
-      let err = 0;
-
-      // loop through the weights to the next layer
-      compareObj.weights.forEach((arr, j) => {
-        // find the relative weight compared to the whole array
-        let errorWeight = arr[i] / arr.reduce((a, v) => a + v, 0);
-
-        // add the weighted error of this node
-        err += errorWeight * compareObj.nodes[j].error;
+  calculateError(compareObj: number[]) {
+    if (Array.isArray(compareObj)) {
+      this.nodes.forEach((node, idx) => {
+        node.error = compareObj[idx] - node.value;
       });
-
-      node.error = err;
-    });
+    }
   }
 }
