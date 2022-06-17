@@ -5,6 +5,7 @@ test("NN inits with inputs/outpus", () => {
   expect(nn.numberOfInputs).toBe(5);
   expect(nn.numberOfOutputs).toBe(5);
 });
+
 test("NN adds first hidden layer", () => {
   const nn = new NN(5, 5);
 
@@ -12,6 +13,7 @@ test("NN adds first hidden layer", () => {
 
   expect(nn.hiddenLayers.length).toBe(1);
 });
+
 test("NN adds multiple hidden layers", () => {
   const nn = new NN(5, 5);
 
@@ -20,6 +22,7 @@ test("NN adds multiple hidden layers", () => {
 
   expect(nn.hiddenLayers.length).toBe(2);
 });
+
 test("NN feeds forward", () => {
   const nn = new NN(1, 1);
 
@@ -33,7 +36,17 @@ test("NN feeds forward", () => {
   nn.feedForward(inputs, [1]);
 
   expect(nn.outputLayer.nodes[0].value).toBe(0.5);
+  expect(nn.error).toBe(0.5);
 });
+
+test("NN calculates loss", () => {
+  const nn = new NN(1, 1);
+
+  nn.calculateLoss([0], [1]);
+
+  expect(nn.error).toBe(1);
+});
+
 test("NN logs", () => {
   const nn = new NN(5, 5);
 

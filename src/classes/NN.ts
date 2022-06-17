@@ -1,21 +1,30 @@
 import activationFunctions, {
   activationFunctionsType,
 } from "../functions/activationFunctions";
+import lossFunctions, { lossFunctionsType } from "../functions/lossFunctions";
 import Layer from "../classes/Layer";
+import LossFunction from "../types/LossFunction";
 
 export class NN {
   activationFunctions = activationFunctions;
+  lossFunctions = lossFunctions;
 
   numberOfInputs: number;
   hiddenLayers: Layer[] = [];
   numberOfOutputs: number;
-
   outputLayer: Layer;
+
+  lossFunction: LossFunction;
   error: number = 0;
-  constructor(numberOfInputs: number, numberOfOutputs: number) {
+  constructor(
+    numberOfInputs: number,
+    numberOfOutputs: number,
+    lossFunction: keyof lossFunctionsType = "mae"
+  ) {
     this.numberOfInputs = numberOfInputs;
     this.numberOfOutputs = numberOfOutputs;
     this.outputLayer = new Layer(numberOfOutputs, numberOfInputs, "relu");
+    this.lossFunction = this.lossFunctions[lossFunction];
   }
 
   addHiddenLayer = (
@@ -35,11 +44,15 @@ export class NN {
     else return this.hiddenLayers[this.hiddenLayers.length - 1].nodes.length;
   };
 
-  feedForward(inputs: number[], outputs: number[]) {
+  calculateLoss = (outputs: number[], expectedValues: number[]) => {
+    this.error = this.lossFunction(outputs, expectedValues);
+  };
+
+  feedForward(inputs: number[], expectedValues: number[]) {
     // check if we were given correct amount of inputs/outputs
     if (
       inputs.length !== this.numberOfInputs ||
-      outputs.length !== this.numberOfOutputs
+      expectedValues.length !== this.numberOfOutputs
     ) {
       throw Error("number of inputs or outputs does not match required amount");
     }
@@ -57,6 +70,8 @@ export class NN {
     this.outputLayer.feedForward(
       this.hiddenLayers[this.hiddenLayers.length - 1].nodes
     );
+
+    this.calculateLoss(this.outputLayer.toArray(), expectedValues);
   }
 
   log = () => {

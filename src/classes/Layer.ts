@@ -57,4 +57,8 @@ export default class Layer {
       node.value = activationValue;
     });
   };
+
+  toArray = () => {
+    return this.nodes.map((node) => node.value);
+  };
 }
