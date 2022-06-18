@@ -1,7 +1,7 @@
-import Layer from "../src/classes/Layer";
+import Layer from "../src/classes/Layer/Layer";
 
 test("should init new layer with nodes and weights", () => {
-  let layer = new Layer(5, 5, "relu");
+  let layer = new Layer(5, 5, "relu", "relu_d");
 
   let expectedNodes = [
     { value: 0, error: 0 },
@@ -23,7 +23,7 @@ test("should init new layer with nodes and weights", () => {
 });
 
 test("should init with activation function", () => {
-  let layer = new Layer(5, 5, "relu");
+  let layer = new Layer(5, 5, "relu", "relu_d");
 
   expect(layer.activationFunction(1)).toBe(1);
 });
@@ -34,7 +34,7 @@ test("should randomize weights and biases", () => {
 
 test("should feed foward", () => {
   let prevInputs = [{ value: 1, error: 0 }];
-  let layer = new Layer(1, prevInputs.length, "relu");
+  let layer = new Layer(1, prevInputs.length, "relu", "relu_d");
 
   layer.weights = [[0.5]];
   layer.biases[0] = 1;
