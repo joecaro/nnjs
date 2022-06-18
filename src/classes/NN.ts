@@ -1,12 +1,13 @@
 import activationFunctions, {
+  activationFunctionsDerivativeType,
   activationFunctionsType,
 } from "../functions/activationFunctions";
 
-import Layer from "../classes/Layer";
-import OutputLayer from "./OutputLayer";
+import Layer from "./Layer/Layer";
+import OutputLayer from "./Layer/OutputLayer";
 import LossFunction from "../types/LossFunction";
 import lossFunctionsType, { lossFunctions } from "../functions/lossFunctions";
-import { add, subtract } from "../functions/matrix";
+import Matrix from "./Matrix/Matrix";
 
 export class NN {
   activationFunctions = activationFunctions;
@@ -19,25 +20,30 @@ export class NN {
 
   lossFunction: LossFunction;
   error: number = 0;
+  learningRate: number;
   constructor(
     numberOfInputs: number,
     numberOfOutputs: number,
-    lossFunction: keyof lossFunctionsType = "mae"
+    lossFunction: keyof lossFunctionsType = "mae",
+    learningRate: number = 0.1
   ) {
     this.numberOfInputs = numberOfInputs;
     this.numberOfOutputs = numberOfOutputs;
     this.outputLayer = new OutputLayer(numberOfOutputs, numberOfInputs);
     this.lossFunction = this.lossFunctions[lossFunction];
+    this.learningRate = learningRate;
   }
 
   addHiddenLayer = (
     numberOfNodes: number,
-    activationFunction: keyof activationFunctionsType = "relu"
+    activationFunction: keyof activationFunctionsType = "relu",
+    activationFunction_d: keyof activationFunctionsDerivativeType = "relu_d"
   ) => {
     let newLayer = new Layer(
       numberOfNodes,
       this.prevNumberOfNodes(),
-      activationFunction
+      activationFunction,
+      activationFunction_d
     );
     this.hiddenLayers.push(newLayer);
     this.outputLayer.updateWeights(numberOfNodes);
@@ -95,11 +101,26 @@ export class NN {
     if (logging) {
       console.log("Output Layer");
       console.table(this.outputLayer.nodes);
+
+      let guess = 0;
+
+      this.outputLayer.nodes.forEach((node, idx) => {
+        if (node.value > this.outputLayer.nodes[guess].value) {
+          guess = idx;
+        }
+      });
+
+      let guessedArr = new Array(this.outputLayer.nodes.length).fill(0);
+
+      guessedArr[guess] = 1;
+
       console.log(
-        this.outputLayer.nodes.reduce((a, v) => a + v.error, 0) /
-          this.outputLayer.nodes.length
+        `Expected: ${expectedValues} | guessed ${guessedArr} with ${Math.round(
+          this.error * 100
+        )}% loss`
       );
-      console.log(this.error);
+
+      console.log(`MSE: ${this.error}`);
 
       console.log("-----------------------");
     }
@@ -127,7 +148,8 @@ export class NN {
       if (this.hiddenLayers.length > 0) {
         for (let i = this.hiddenLayers.length - 1; i >= 0; i--) {
           switch (i) {
-            case this.hiddenLayers.length - 1:
+            case this.hiddenLayers.length - 1: // last hidden layer
+              // array might only have one hidden layer. check length before proceeding. We need to use input nodes in only one HL
               if (this.hiddenLayers.length > 1) {
                 this.hiddenLayers[i].backProp(
                   this.hiddenLayers[i - 1].nodes,
@@ -168,7 +190,7 @@ export class NN {
     // console.log(`\nProposed Weight Adjustments`);
     // console.table(this.outputLayer.proposedWeightAdjustments);
 
-    // average adjustmentsArr
+    // average output adjustmentsArr
     if (this.outputLayer.proposedWeightAdjustments.length > 0) {
       let weightAdjustments: number[][] = new Array(
         this.outputLayer.proposedWeightAdjustments[0].length
@@ -185,24 +207,56 @@ export class NN {
         i < this.outputLayer.proposedWeightAdjustments.length;
         i++
       ) {
-        weightAdjustments = add(
+        weightAdjustments = Matrix.add(
           this.outputLayer.proposedWeightAdjustments[i],
           weightAdjustments
         );
       }
 
-      this.outputLayer.weights = subtract(
+      weightAdjustments = Matrix.multNumber(
+        weightAdjustments,
+        this.learningRate
+      );
+
+      this.outputLayer.weights = Matrix.subtract(
         this.outputLayer.weights,
         weightAdjustments
       );
+
+      this.outputLayer.proposedWeightAdjustments = [];
     }
 
-    // console.log(`New Weights`);
-    // console.table(this.outputLayer.weights);
+    // average adjustments for each hidden layer
 
+    if (this.hiddenLayers.length > 0) {
+      for (let i = 0; i < this.hiddenLayers.length; i++) {
+        let hiddenLayer = this.hiddenLayers[i];
+        let weightAdjustments = new Matrix(
+          hiddenLayer.weights.length,
+          hiddenLayer.weights[0].length
+        ).matrix;
+
+        for (let i = 0; i < hiddenLayer.proposedWeightAdjustments.length; i++) {
+          weightAdjustments = Matrix.add(
+            hiddenLayer.proposedWeightAdjustments[i],
+            weightAdjustments
+          );
+        }
+
+        weightAdjustments = Matrix.multNumber(
+          weightAdjustments,
+          this.learningRate
+        );
+
+        hiddenLayer.weights = Matrix.subtract(
+          hiddenLayer.weights,
+          weightAdjustments
+        );
+
+        hiddenLayer.proposedWeightAdjustments = [];
+      }
+    }
     this.feedForward(inputs[0], expectedValues[0], logging);
-
-    // console.table(this.hiddenLayers[0].proposedWeightAdjustments);
 
     console.log(`Values After Quick Train`);
     console.table(this.outputLayer.nodes);
