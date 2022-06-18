@@ -10,6 +10,9 @@ export const lossFunctions: lossFunctionsType = {
 };
 
 export const lossFunctions_D: LossFunctionType_D = {
+  mse: (output: number, expectedValue: number) => {
+    return 2 * (output - expectedValue);
+  },
   mae: (output: number, expectedValue: number) => {
     if (output > expectedValue) return 1;
     else return -1;
@@ -22,6 +25,7 @@ export type lossFunctionsType = {
 };
 
 export type LossFunctionType_D = {
+  mse: (output: number, expectedValue: number) => number;
   mae: (output: number, expectedValue: number) => number;
 };
 
