@@ -8,6 +8,7 @@ export default class Layer {
   nodes: Node[];
   activationFunction: ActivationFunction;
   weights: number[][];
+  proposedWeightAdjustments: number[][][] = [];
   biases: number[];
   gradients: number[];
   previousLayerNodeAmount: number;
@@ -23,8 +24,8 @@ export default class Layer {
     this.previousLayerNodeAmount = previousNumberOfNodes;
     this.activationFunction = activationFunctions[activationFunction];
     this.weights = this.generateWeights();
-    this.biases = new Array(numberOfNodes).fill(0);
-    this.gradients = new Array(numberOfNodes).fill(0);
+    this.biases = new Array(numberOfNodes).fill(0).map(() => 0);
+    this.gradients = new Array(numberOfNodes).fill(0).map(() => 0);
   }
 
   generateWeights = () => {
@@ -66,6 +67,30 @@ export default class Layer {
       node.value = activationValue;
     });
   };
+
+  backProp(prevLayerNodes: Node[], gradients: number[][]) {
+    let adjustmentsMatrix: number[][] = [];
+
+    this.weights.forEach((arr, i) => {
+      let adjustmentsArr: number[] = [];
+      arr.forEach((weight, j) => {
+        let prevNodeActivation = prevLayerNodes[j].value;
+        // sum adjustments to weights from forward layer
+        let gradientSum = gradients.reduce((a, v) => a + v[j], 0);
+        // console.table(gradients);
+
+        // console.log(`gradient sum: ${gradientSum}`);
+
+        //calculate gradient and push to tmp array
+        let gradient = prevNodeActivation * gradientSum;
+        adjustmentsArr.push(gradient);
+      });
+      adjustmentsMatrix.push(adjustmentsArr);
+    });
+    this.proposedWeightAdjustments.push(adjustmentsMatrix);
+
+    return this.proposedWeightAdjustments;
+  }
 
   toArray = () => {
     return this.nodes.map((node) => node.value);

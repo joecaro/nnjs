@@ -1,12 +1,19 @@
 import LossFunction from "../types/LossFunction";
 
-const lossFunctions: lossFunctionsType = {
+export const lossFunctions: lossFunctionsType = {
   mse: (outputs, expectedValues) =>
-    expectedValues.reduce((a, v, idx) => a + Math.pow(v - outputs[idx], 2), 0) /
+    expectedValues.reduce((a, v, idx) => a + Math.pow(outputs[idx] - v, 2), 0) /
     expectedValues.length,
   mae: (outputs, expectedValues) =>
-    expectedValues.reduce((a, v, idx) => a + Math.abs(v - outputs[idx]), 0) /
+    expectedValues.reduce((a, v, idx) => a + Math.abs(outputs[idx] - v), 0) /
     expectedValues.length,
+};
+
+export const lossFunctions_D: LossFunctionType_D = {
+  mae: (output: number, expectedValue: number) => {
+    if (output > expectedValue) return 1;
+    else return -1;
+  },
 };
 
 export type lossFunctionsType = {
@@ -14,4 +21,8 @@ export type lossFunctionsType = {
   mae: LossFunction;
 };
 
-export default lossFunctions;
+export type LossFunctionType_D = {
+  mae: (output: number, expectedValue: number) => number;
+};
+
+export default lossFunctionsType;

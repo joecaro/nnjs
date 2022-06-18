@@ -3,23 +3,29 @@ import activationFunctions, {
   activationFunctionsType,
 } from "../functions/activationFunctions";
 import Node from "../types/Node";
+import Layer from "./Layer";
+import { lossFunctions, lossFunctions_D } from "../functions/lossFunctions";
 
 export default class OutputLayer {
   nodes: Node[];
   activationFunction: ActivationFunction;
+  activationFunction_d: ActivationFunction;
   weights: number[][];
+  proposedWeightAdjustments: number[][][] = [];
   previousLayerNodeAmount: number;
 
   constructor(
     numberOfNodes: number,
     previousNumberOfNodes: number = 0,
-    activationFunction: keyof activationFunctionsType = "sigmoid"
+    activationFunction: keyof activationFunctionsType = "sigmoid",
+    activationFunction_d: keyof activationFunctionsType = "sigmoid_d"
   ) {
     this.nodes = new Array(numberOfNodes)
       .fill(0)
       .map(() => ({ value: 0, error: 0 }));
     this.previousLayerNodeAmount = previousNumberOfNodes;
     this.activationFunction = activationFunctions[activationFunction];
+    this.activationFunction_d = activationFunctions[activationFunction_d];
     this.weights = this.generateWeights();
   }
 
@@ -67,5 +73,35 @@ export default class OutputLayer {
         node.error = compareObj[idx] - node.value;
       });
     }
+  }
+
+  backProp(
+    lastLayer: Layer,
+    inputs: Node[],
+    error: number,
+    expectedValues: number[]
+  ) {
+    let adjustmentsMatrix: number[][] = [];
+
+    this.weights.forEach((arr, i) => {
+      let adjustmentsArr: number[] = [];
+      arr.forEach((weight, j) => {
+        let prevNodeActivation = lastLayer
+          ? lastLayer.nodes[j].value
+          : inputs[j].value;
+
+        let gradient =
+          prevNodeActivation *
+          activationFunctions.sigmoid_d(weight * prevNodeActivation) *
+          lossFunctions_D.mae(this.nodes[i].value, expectedValues[i]);
+        let adjustment = error * gradient;
+        adjustmentsArr.push(adjustment);
+      });
+      adjustmentsMatrix.push(adjustmentsArr);
+    });
+
+    this.proposedWeightAdjustments.push(adjustmentsMatrix);
+
+    return this.proposedWeightAdjustments;
   }
 }
