@@ -4,6 +4,7 @@ import activationFunctions, {
   activationFunctionsType,
 } from "../../functions/activationFunctions";
 import Matrix from "../Matrix/Matrix";
+import LayerTypes from "../../types/LayerTypes";
 
 export default class Layer {
   numberOfNodes: number;
@@ -11,15 +12,14 @@ export default class Layer {
   type: string;
   weights: Matrix;
   biases: Matrix;
-  activationFunction: ActivationFunction = activationFunctions.sigmoid;
-  activationFunctionDerivative: ActivationFunction =
-    activationFunctionDerivatives.sigmoid;
+  activationFunction: ActivationFunction;
+  activationFunctionDerivative: ActivationFunction;
 
   constructor(
     numberOfNodes: number,
     numberOfInputs: number,
     type: keyof LayerTypes,
-    activationFunction: keyof activationFunctionsType = "sigmoid"
+    activationFunction: keyof activationFunctionsType
   ) {
     this.numberOfNodes = numberOfNodes;
     this.numberOfInputs = numberOfInputs;
@@ -33,6 +33,11 @@ export default class Layer {
       activationFunctionDerivatives[activationFunction];
   }
 
+  randomize() {
+    this.weights.randomize();
+    this.biases.randomize();
+  }
+
   generateOutputs(inputs: Matrix) {
     let outputs = Matrix.multiply(this.weights, inputs);
     outputs.add(this.biases);
@@ -41,7 +46,7 @@ export default class Layer {
     return outputs;
   }
 
-  generateGradient(outputs: Matrix) {
+  generateGradients(outputs: Matrix) {
     let gradients = Matrix.map(outputs, this.activationFunctionDerivative);
     return gradients;
   }
@@ -53,9 +58,14 @@ export default class Layer {
   updateWeights(adjustments: Matrix) {
     this.weights.add(adjustments);
   }
-}
 
-type LayerTypes = {
-  hidden: string;
-  output: string;
-};
+  updateBiases(adjustments: Matrix) {
+    this.biases.add(adjustments);
+  }
+
+  updateInputs(numberOfInputs: number) {
+    this.numberOfInputs = numberOfInputs;
+
+    this.weights = new Matrix(this.numberOfNodes, numberOfInputs);
+  }
+}
