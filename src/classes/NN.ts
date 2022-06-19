@@ -1,3 +1,4 @@
+import logWithStyle from "../../lib/LogWithStyle";
 import activationFunctions, {
   activationFunctionDerivatives,
   activationFunctionsType,
@@ -293,26 +294,27 @@ export class NN {
   }
 
   log(verbose: boolean = false) {
-    console.log("-----");
-    console.log("Layers:");
-    console.log(` Input: ${this.numberOfInputs}`);
+    console.log("-----\n");
+    logWithStyle("Layers:", "header");
+    logWithStyle(` Input:`, "subhead");
+    console.log(` ${this.numberOfInputs}`);
     this.layers.forEach((layer, idx) => {
       if (layer.type === "hidden") {
+        logWithStyle(` Hidden Layer${idx + 1}:`, "subhead");
         console.log(
-          ` Hidden Layer${idx + 1}:\n   Nodes: ${
-            layer.numberOfNodes
-          }\n   Activation Function: ${layer.activationFunction.name}`
+          `   Nodes: ${layer.numberOfNodes}\n   Activation Function: ${layer.activationFunction.name}`
         );
       } else {
+        logWithStyle(` Output:`, "subhead");
         console.log(
-          ` Output:\n   Nodes: ${layer.numberOfNodes}\n   Activation Function: ${layer.activationFunction.name}`
+          `   Nodes: ${layer.numberOfNodes}\n   Activation Function: ${layer.activationFunction.name}`
         );
       }
     });
-    console.log("-----");
+    console.log("\n-----\n");
     console.log(`Other`);
     console.log(` Learning Rate: ${this.learning_rate}`);
-    console.log("-----");
+    console.log("\n-----");
 
     if (verbose) {
       this.layers.forEach((layer, idx) => {
