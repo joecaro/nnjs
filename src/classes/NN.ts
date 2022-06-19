@@ -251,7 +251,7 @@ export class NN {
     inputs: number[][],
     targets: number[][],
     options: Options = defaultOptions,
-    batchSize: number = 1
+    batchSize: number = 10
   ) {
     if (inputs.length === 0 || targets.length === 0)
       throw Error("ERROR Train - provided inputs or targets were empty");
@@ -291,6 +291,41 @@ export class NN {
       console.log(this.backPropogate([firstInputs], [firstTargets]).matrix);
     }
   }
+
+  log(verbose: boolean = false) {
+    console.log("-----");
+    console.log("Layers:");
+    console.log(` Input: ${this.numberOfInputs}`);
+    this.layers.forEach((layer, idx) => {
+      if (layer.type === "hidden") {
+        console.log(
+          ` Hidden Layer${idx + 1}:\n   Nodes: ${
+            layer.numberOfNodes
+          }\n   Activation Function: ${layer.activationFunction.name}`
+        );
+      } else {
+        console.log(
+          ` Output:\n   Nodes: ${layer.numberOfNodes}\n   Activation Function: ${layer.activationFunction.name}`
+        );
+      }
+    });
+    console.log("-----");
+    console.log(`Other`);
+    console.log(` Learning Rate: ${this.learning_rate}`);
+    console.log("-----");
+
+    if (verbose) {
+      this.layers.forEach((layer, idx) => {
+        if (layer.type === "hidden") {
+          console.log(` Hidden Layer${idx + 1}`);
+          console.table(layer.weights.matrix);
+        } else {
+          console.log(` Output:`);
+          console.table(layer.weights.matrix);
+        }
+      });
+    }
+  }
 }
 
 function round(num: number) {
@@ -313,7 +348,7 @@ interface Options {
   logResults: boolean;
 }
 
-let defaultOptions: Options = {
+export let defaultOptions: Options = {
   logBatchError: false,
   logResults: true,
 };
