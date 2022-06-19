@@ -6,24 +6,25 @@ const activationFunctions: activationFunctionsType = {
   tanh: (value: number) => 2 / (1 + Math.pow(Math.E, -2 * value) + 1),
 };
 
-export const activationFunctionDerivs: activationFunctionsDerivativeType = {
-  relu_d: (value: number) => {
-    if (value >= 0) {
-      return 1;
-    } else {
-      return 0;
-    }
-  },
-  sigmoid_d: (x) => {
-    let x1 = 1 / (1 + Math.exp(-x));
-    return x1 * (1 - x1);
-  },
-  tanh_d: (value: number) => {
-    let numer = Math.pow(Math.exp(2 * value) - 1, 2);
-    let denom = Math.pow(Math.exp(2 * value) + 1, 2);
-    return 1 - numer / denom;
-  },
-};
+export const activationFunctionDerivatives: activationFunctionsDerivativeType =
+  {
+    relu_d: (value: number) => {
+      if (value >= 0) {
+        return 1;
+      } else {
+        return 0;
+      }
+    },
+    sigmoid_d: (x) => {
+      // let x1 = 1 / (1 + Math.pow(Math.E, -x));
+      return x * (1 - x);
+    },
+    tanh_d: (value: number) => {
+      let numer = Math.pow(Math.exp(2 * value) - 1, 2);
+      let denom = Math.pow(Math.exp(2 * value) + 1, 2);
+      return 1 - numer / denom;
+    },
+  };
 
 export type activationFunctionsType = {
   relu: ActivationFunction;

@@ -1,277 +1,135 @@
 import activationFunctions, {
-  activationFunctionsDerivativeType,
-  activationFunctionsType,
+  activationFunctionDerivatives,
 } from "../functions/activationFunctions";
-
-import Layer from "./Layer/Layer";
-import OutputLayer from "./Layer/OutputLayer";
-import LossFunction from "../types/LossFunction";
 import lossFunctionsType, { lossFunctions } from "../functions/lossFunctions";
+import ActivationFunction from "../types/ActivationFunction";
+import LossFunction from "../types/LossFunction";
 import Matrix from "./Matrix/Matrix";
 
 export class NN {
   activationFunctions = activationFunctions;
+  activationFunction: ActivationFunction = activationFunctions.sigmoid;
+  activationFunctionDerivative: ActivationFunction =
+    activationFunctionDerivatives.sigmoid_d;
   lossFunctions = lossFunctions;
+  lossFunction: LossFunction = lossFunctions.mse;
 
   numberOfInputs: number;
-  hiddenLayers: Layer[] = [];
+  numberOfHiddenNodes: number;
   numberOfOutputs: number;
-  outputLayer: OutputLayer;
+  learning_rate: number = 0.1;
 
-  lossFunction: LossFunction;
-  error: number = 0;
-  learningRate: number;
+  weights_ih: Matrix;
+  weights_ho: Matrix;
+  bias_h: Matrix;
+  bias_o: Matrix;
+
   constructor(
     numberOfInputs: number,
-    numberOfOutputs: number,
-    lossFunction: keyof lossFunctionsType = "mae",
-    learningRate: number = 0.1
+    numberOfHiddenNodes: number,
+    numberOfOutputs: number
   ) {
     this.numberOfInputs = numberOfInputs;
+    this.numberOfHiddenNodes = numberOfHiddenNodes;
     this.numberOfOutputs = numberOfOutputs;
-    this.outputLayer = new OutputLayer(numberOfOutputs, numberOfInputs);
-    this.lossFunction = this.lossFunctions[lossFunction];
-    this.learningRate = learningRate;
+
+    this.weights_ih = new Matrix(numberOfHiddenNodes, numberOfInputs);
+    this.weights_ho = new Matrix(numberOfOutputs, numberOfHiddenNodes);
+    this.bias_h = new Matrix(numberOfHiddenNodes, 1);
+    this.bias_o = new Matrix(numberOfOutputs, 1);
+
+    this.bias_h.randomize();
+    this.bias_o.randomize();
   }
 
-  addHiddenLayer = (
-    numberOfNodes: number,
-    activationFunction: keyof activationFunctionsType = "relu",
-    activationFunction_d: keyof activationFunctionsDerivativeType = "relu_d"
-  ) => {
-    let newLayer = new Layer(
-      numberOfNodes,
-      this.prevNumberOfNodes(),
-      activationFunction,
-      activationFunction_d
+  setLearning_rate(rate: number) {
+    this.learning_rate = rate;
+  }
+  setLossFunction(lossFunction: keyof lossFunctionsType = "mse") {
+    this.lossFunction = lossFunctions[lossFunction];
+  }
+
+  predict(input_array: number[]) {
+    let inputs = Matrix.fromArray(input_array);
+
+    // generate hidden outputs
+    let hidden = Matrix.multiply(this.weights_ih, inputs);
+    hidden.add(this.bias_h);
+    hidden.map(this.activationFunction);
+
+    //generate outputs
+    let outputs = Matrix.multiply(this.weights_ho, hidden);
+    outputs.add(this.bias_o);
+    outputs.map(this.activationFunction);
+
+    return outputs.toArray();
+  }
+
+  train(input_array: number[], target_array: number[]) {
+    //PREDICT
+    let inputs = Matrix.fromArray(input_array);
+
+    // generate hidden outputs
+    let hidden_outputs = Matrix.multiply(this.weights_ih, inputs);
+    hidden_outputs.add(this.bias_h);
+    hidden_outputs.map(this.activationFunction);
+
+    //generate outputs
+    let outputs = Matrix.multiply(this.weights_ho, hidden_outputs);
+    outputs.add(this.bias_o);
+    outputs.map(this.activationFunction);
+    //PREDICT
+
+    // calculate error of outputs
+    let targets = Matrix.fromArray(target_array);
+
+    let output_errors = Matrix.subtract(targets, outputs);
+
+    // calculate gradients
+    let output_gradients = Matrix.map(
+      outputs,
+      this.activationFunctionDerivative
     );
-    this.hiddenLayers.push(newLayer);
-    this.outputLayer.updateWeights(numberOfNodes);
-  };
+    output_gradients.multiply(output_errors);
+    output_gradients.multNumber(this.learning_rate);
 
-  prevNumberOfNodes = (): number => {
-    if (this.hiddenLayers.length === 0) return this.numberOfInputs;
-    else return this.hiddenLayers[this.hiddenLayers.length - 1].nodes.length;
-  };
+    // Calculate weight adjustments
+    let hidden_transposed = Matrix.transpose(hidden_outputs);
+    let weight_ho_deltas = Matrix.multiply(output_gradients, hidden_transposed);
 
-  randomizeWeights = () => {
-    this.hiddenLayers.forEach((layer) => {
-      layer.randomizeWeights();
-    });
-    this.outputLayer.randomizeWeights();
-  };
+    //adjust the weights using the adjustments
+    this.weights_ho.add(weight_ho_deltas);
 
-  calculateLoss = (outputs: number[], expectedValues: number[]) => {
-    this.error = this.lossFunction(outputs, expectedValues);
-  };
+    // biases need to be adjusted by just the gradients
+    this.bias_o.add(output_gradients);
 
-  feedForward(
-    inputs: number[],
-    expectedValues: number[],
-    logging: boolean = false
-  ) {
-    // check if we were given correct amount of inputs/outputs
-    if (
-      inputs.length !== this.numberOfInputs ||
-      expectedValues.length !== this.numberOfOutputs
-    ) {
-      throw Error("number of inputs or outputs does not match required amount");
-    }
+    // calculate hidden layer errors
+    let weights_ho_transposed = Matrix.transpose(this.weights_ho);
+    let hidden_erros = Matrix.multiply(weights_ho_transposed, output_errors);
 
-    // format input values
-    let inputNodes = inputs.map((input) => ({ value: input, error: 0 }));
+    // calculate hidden gradients
+    let hidden_gradients = Matrix.map(
+      hidden_outputs,
+      this.activationFunctionDerivative
+    );
+    hidden_gradients.multiply(hidden_erros);
+    hidden_gradients.multNumber(this.learning_rate);
 
-    // feed forward through hidden layers
-    this.hiddenLayers.forEach((layer, idx) => {
-      if (idx === 0) layer.feedForward(inputNodes);
-      else layer.feedForward(this.hiddenLayers[idx - 1].nodes);
-    });
-
-    //feed forward to outputs
-    this.outputLayer.feedForward(
-      this.hiddenLayers.length !== 0
-        ? this.hiddenLayers[this.hiddenLayers.length - 1].nodes
-        : inputNodes
+    // calculate hidden weight adjustments
+    let inputs_transposed = Matrix.transpose(inputs);
+    let weights_ih_deltas = Matrix.multiply(
+      hidden_gradients,
+      inputs_transposed
     );
 
-    this.calculateLoss(this.outputLayer.toArray(), expectedValues);
+    this.weights_ih.add(weights_ih_deltas);
 
-    this.outputLayer.calculateError(expectedValues);
+    this.bias_h.add(hidden_gradients);
 
-    if (logging) {
-      console.log("Output Layer");
-      console.table(this.outputLayer.nodes);
+    // outputs.print();
+    // targets.print();
+    output_errors.print();
 
-      let guess = 0;
-
-      this.outputLayer.nodes.forEach((node, idx) => {
-        if (node.value > this.outputLayer.nodes[guess].value) {
-          guess = idx;
-        }
-      });
-
-      let guessedArr = new Array(this.outputLayer.nodes.length).fill(0);
-
-      guessedArr[guess] = 1;
-
-      console.log(
-        `Expected: ${expectedValues} | guessed ${guessedArr} with ${Math.round(
-          this.error * 100
-        )}% loss`
-      );
-
-      console.log(`MSE: ${this.error}`);
-
-      console.log("-----------------------");
-    }
+    return output_errors;
   }
-
-  backPropogate(
-    inputs: number[][],
-    expectedValues: number[][],
-    logging: boolean = false
-  ) {
-    // batch through inputs and create adjustment matrices
-    inputs.forEach((inputArray, idx) => {
-      this.feedForward(inputArray, expectedValues[idx], logging);
-
-      // format input values
-      let inputNodes = inputArray.map((input) => ({ value: input, error: 0 }));
-
-      this.outputLayer.backProp(
-        this.hiddenLayers[this.hiddenLayers.length - 1],
-        inputNodes,
-        this.error,
-        expectedValues[idx]
-      );
-
-      if (this.hiddenLayers.length > 0) {
-        for (let i = this.hiddenLayers.length - 1; i >= 0; i--) {
-          switch (i) {
-            case this.hiddenLayers.length - 1: // last hidden layer
-              // array might only have one hidden layer. check length before proceeding. We need to use input nodes in only one HL
-              if (this.hiddenLayers.length > 1) {
-                this.hiddenLayers[i].backProp(
-                  this.hiddenLayers[i - 1].nodes,
-                  this.outputLayer.proposedWeightAdjustments[idx]
-                );
-              } else {
-                this.hiddenLayers[i].backProp(
-                  inputNodes,
-                  this.outputLayer.proposedWeightAdjustments[idx]
-                );
-              }
-            case 0:
-              if (this.hiddenLayers.length > 1) {
-                this.hiddenLayers[i].backProp(
-                  inputNodes,
-                  this.hiddenLayers[i + 1].proposedWeightAdjustments[idx]
-                );
-              } else {
-                this.hiddenLayers[i].backProp(
-                  inputNodes,
-                  this.outputLayer.proposedWeightAdjustments[idx]
-                );
-              }
-            case -1:
-              break;
-            default:
-              this.hiddenLayers[i].backProp(
-                this.hiddenLayers[i - 1].nodes,
-                this.hiddenLayers[i + 1].proposedWeightAdjustments[idx]
-              );
-          }
-        }
-      }
-    });
-
-    // console.log(`Current Weights`);
-    // console.table(this.outputLayer.weights);
-    // console.log(`\nProposed Weight Adjustments`);
-    // console.table(this.outputLayer.proposedWeightAdjustments);
-
-    // average output adjustmentsArr
-    if (this.outputLayer.proposedWeightAdjustments.length > 0) {
-      let weightAdjustments: number[][] = new Array(
-        this.outputLayer.proposedWeightAdjustments[0].length
-      )
-        .fill(0)
-        .map((row) =>
-          new Array(this.outputLayer.proposedWeightAdjustments[0][0].length)
-            .fill(0)
-            .map(() => 0)
-        );
-
-      for (
-        let i = 0;
-        i < this.outputLayer.proposedWeightAdjustments.length;
-        i++
-      ) {
-        weightAdjustments = Matrix.add(
-          this.outputLayer.proposedWeightAdjustments[i],
-          weightAdjustments
-        );
-      }
-
-      weightAdjustments = Matrix.multNumber(
-        weightAdjustments,
-        this.learningRate
-      );
-
-      this.outputLayer.weights = Matrix.subtract(
-        this.outputLayer.weights,
-        weightAdjustments
-      );
-
-      this.outputLayer.proposedWeightAdjustments = [];
-    }
-
-    // average adjustments for each hidden layer
-
-    if (this.hiddenLayers.length > 0) {
-      for (let i = 0; i < this.hiddenLayers.length; i++) {
-        let hiddenLayer = this.hiddenLayers[i];
-        let weightAdjustments = new Matrix(
-          hiddenLayer.weights.length,
-          hiddenLayer.weights[0].length
-        ).matrix;
-
-        for (let i = 0; i < hiddenLayer.proposedWeightAdjustments.length; i++) {
-          weightAdjustments = Matrix.add(
-            hiddenLayer.proposedWeightAdjustments[i],
-            weightAdjustments
-          );
-        }
-
-        weightAdjustments = Matrix.multNumber(
-          weightAdjustments,
-          this.learningRate
-        );
-
-        hiddenLayer.weights = Matrix.subtract(
-          hiddenLayer.weights,
-          weightAdjustments
-        );
-
-        hiddenLayer.proposedWeightAdjustments = [];
-      }
-    }
-    this.feedForward(inputs[0], expectedValues[0], logging);
-
-    console.log(`Values After Quick Train`);
-    console.table(this.outputLayer.nodes);
-  }
-
-  log = () => {
-    let message = `-----\nlayers:\n Inputs: ${this.numberOfInputs}`;
-
-    this.hiddenLayers.forEach((layer, idx) => {
-      message += `\n Hidden Layer ${idx + 1}: ${layer.nodes.length}`;
-    });
-
-    message += `\n Outputs: ${this.numberOfOutputs}\n------`;
-
-    console.log(message);
-    return message;
-  };
 }
