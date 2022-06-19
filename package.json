@@ -1,6 +1,6 @@
 {
   "name": "nnjs",
-  "version": "0.1.0",
+  "version": "0.8.0",
   "description": "Neural Network Library for JavaScript",
   "main": "index.ts",
   "author": "Joseph Carothers",
