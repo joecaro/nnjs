@@ -12,6 +12,10 @@ export default class Matrix {
   }
 
   static add(matrix1: Matrix, matrix2: Matrix): Matrix {
+    if (matrix1.rows !== matrix2.rows || matrix1.columns !== matrix2.columns)
+      throw Error(
+        "Error = static add cannot work on matricies of different shapes"
+      );
     let newMatrix: Matrix = new Matrix(matrix1.rows, matrix1.columns).map(
       (val: number, i: number, j: number) =>
         matrix1.matrix[i][j] + matrix2.matrix[i][j]
@@ -21,6 +25,10 @@ export default class Matrix {
   }
 
   static subtract(matrix1: Matrix, matrix2: Matrix): Matrix {
+    if (matrix1.rows !== matrix2.rows || matrix1.columns !== matrix2.columns)
+      throw Error(
+        "Error = static subtract cannot work on matricies of different shapes"
+      );
     let newMatrix: Matrix = new Matrix(matrix1.rows, matrix1.columns).map(
       (val: number, i: number, j: number) =>
         matrix1.matrix[i][j] - matrix2.matrix[i][j]
@@ -94,21 +102,15 @@ export default class Matrix {
   }
 
   multNumber(number: number): void {
-    this.matrix.forEach((row) => {
-      row.forEach((num) => (num *= number));
-    });
+    this.map((val, i, j) => (this.matrix[i][j] *= number));
   }
 
   divNumber(number: number): void {
-    this.matrix.forEach((row) => {
-      row.forEach((num) => (num /= number));
-    });
+    this.map((val, i, j) => (this.matrix[i][j] /= number));
   }
 
   addNumber(number: number): void {
-    this.matrix.forEach((row) => {
-      row.forEach((num) => (num += number));
-    });
+    this.map((val, i, j) => (this.matrix[i][j] += number));
   }
 
   toArray() {
