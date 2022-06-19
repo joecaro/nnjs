@@ -8,18 +8,18 @@ const activationFunctions: activationFunctionsType = {
 
 export const activationFunctionDerivatives: activationFunctionsDerivativeType =
   {
-    relu_d: (value: number) => {
+    relu: (value: number) => {
       if (value >= 0) {
         return 1;
       } else {
         return 0;
       }
     },
-    sigmoid_d: (x) => {
+    sigmoid: (x) => {
       // let x1 = 1 / (1 + Math.pow(Math.E, -x));
       return x * (1 - x);
     },
-    tanh_d: (value: number) => {
+    tanh: (value: number) => {
       let numer = Math.pow(Math.exp(2 * value) - 1, 2);
       let denom = Math.pow(Math.exp(2 * value) + 1, 2);
       return 1 - numer / denom;
@@ -33,9 +33,9 @@ export type activationFunctionsType = {
 };
 
 export type activationFunctionsDerivativeType = {
-  relu_d: ActivationFunction;
-  sigmoid_d: ActivationFunction;
-  tanh_d: ActivationFunction;
+  relu: ActivationFunction;
+  sigmoid: ActivationFunction;
+  tanh: ActivationFunction;
 };
 
 export default activationFunctions;
