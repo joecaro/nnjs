@@ -1,91 +1,61 @@
-import {
-  activationFunctionsDerivativeType,
+import ActivationFunction from "../../types/ActivationFunction";
+import activationFunctions, {
+  activationFunctionDerivatives,
   activationFunctionsType,
 } from "../../functions/activationFunctions";
-import Node from "../../types/Node";
-import BaseLayer from "./BaseLayer";
+import Matrix from "../Matrix/Matrix";
 
-export default class Layer extends BaseLayer {
-  biases: number[];
-  gradients: number[];
+export default class Layer {
+  numberOfNodes: number;
+  numberOfInputs: number;
+  type: string;
+  weights: Matrix;
+  biases: Matrix;
+  activationFunction: ActivationFunction = activationFunctions.sigmoid;
+  activationFunctionDerivative: ActivationFunction =
+    activationFunctionDerivatives.sigmoid;
 
   constructor(
     numberOfNodes: number,
-    previousNumberOfNodes: number = 0,
-    activationFunction: keyof activationFunctionsType,
-    activationFunction_d: keyof activationFunctionsDerivativeType
+    numberOfInputs: number,
+    type: keyof LayerTypes,
+    activationFunction: keyof activationFunctionsType = "sigmoid"
   ) {
-    super(
-      numberOfNodes,
-      previousNumberOfNodes,
-      activationFunction,
-      activationFunction_d
-    );
-    this.biases = new Array(numberOfNodes).fill(0).map(() => 0);
-    this.gradients = new Array(numberOfNodes).fill(0).map(() => 0);
+    this.numberOfNodes = numberOfNodes;
+    this.numberOfInputs = numberOfInputs;
+    this.type = type;
+
+    this.weights = new Matrix(numberOfNodes, numberOfInputs);
+    this.biases = new Matrix(numberOfNodes, 1);
+
+    this.activationFunction = activationFunctions[activationFunction];
+    this.activationFunctionDerivative =
+      activationFunctionDerivatives[activationFunction];
   }
 
-  randomizeBiases = () => {
-    for (let i = 0; i < this.biases.length; i++) {
-      this.biases[i] = Math.random();
-    }
-  };
+  generateOutputs(inputs: Matrix) {
+    let outputs = Matrix.multiply(this.weights, inputs);
+    outputs.add(this.biases);
+    outputs.map(this.activationFunction);
 
-  feedForward = (inputs: Node[]) => {
-    this.nodes.forEach((node, index) => {
-      // get weights assigned to this node
-      let weights = this.weights[index];
-      // calculate node value based on sum of prev nodes * weights
-      let weightedValue = inputs.reduce(
-        (a, v, idx) => v.value * weights[idx] + a,
-        0
-      );
-      let activationValue = this.activationFunction(
-        weightedValue + this.biases[index]
-      );
-      node.value = activationValue;
-    });
-  };
-
-  backProp(prevLayerNodes: Node[], gradients: number[][]) {
-    let adjustmentsMatrix: number[][] = [];
-
-    this.weights.forEach((arr, i) => {
-      let adjustmentsArr: number[] = [];
-      arr.forEach((weight, j) => {
-        let prevNodeActivation = prevLayerNodes[j].value;
-        // sum adjustments to weights from forward layer
-        let gradientSum = gradients.reduce((a, v) => a + v[j], 0);
-        // console.table(gradients);
-
-        // console.log(`gradient sum: ${gradientSum}`);
-
-        //calculate gradient and push to tmp array
-        let gradient = prevNodeActivation * gradientSum;
-        adjustmentsArr.push(gradient);
-      });
-      adjustmentsMatrix.push(adjustmentsArr);
-    });
-    this.proposedWeightAdjustments.push(adjustmentsMatrix);
-
-    return this.proposedWeightAdjustments;
+    return outputs;
   }
 
-  calculateError(compareObj: Layer) {
-    // for each node
-    this.nodes.forEach((node, i) => {
-      let err = 0;
+  generateGradient(outputs: Matrix) {
+    let gradients = Matrix.map(outputs, this.activationFunctionDerivative);
+    return gradients;
+  }
 
-      // loop through the weights to the next layer
-      compareObj.weights.forEach((arr, j) => {
-        // find the relative weight compared to the whole array
-        let errorWeight = arr[i] / arr.reduce((a, v) => a + v, 0);
+  getWeights() {
+    return this.weights;
+  }
 
-        // add the weighted error of this node
-        err += errorWeight * compareObj.nodes[j].error;
-      });
-
-      node.error = err;
-    });
+  updateWeights(adjustments: Matrix) {
+    this.weights.add(adjustments);
   }
 }
+
+type LayerTypes = {
+  hidden: string;
+  output: string;
+};

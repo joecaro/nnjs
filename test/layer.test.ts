@@ -1,48 +1,22 @@
 import Layer from "../src/classes/Layer/Layer";
+import Matrix from "../src/classes/Matrix/Matrix";
 
-test("should init new layer with nodes and weights", () => {
-  let layer = new Layer(5, 5, "relu", "relu_d");
+test("should init new layer", () => {
+  let layer = new Layer(1, 1, "hidden");
 
-  let expectedNodes = [
-    { value: 0, error: 0 },
-    { value: 0, error: 0 },
-    { value: 0, error: 0 },
-    { value: 0, error: 0 },
-    { value: 0, error: 0 },
-  ];
-  let expectedWeights = [
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-  ];
-
-  expect(layer.nodes).toMatchObject(expectedNodes);
-  expect(layer.weights).toMatchObject(expectedWeights);
+  expect(layer.weights.matrix).toMatchObject([[0]]);
+  expect(layer.type).toBe("hidden");
 });
 
-test("should init with activation function", () => {
-  let layer = new Layer(5, 5, "relu", "relu_d");
+test("should generate outputs", () => {
+  let layer = new Layer(1, 1, "hidden");
+  layer.weights.addNumber(1);
+  layer.biases.addNumber(1);
 
-  expect(layer.activationFunction(1)).toBe(1);
-});
+  let inputs = new Matrix(1, 1);
 
-test("should randomize weights and biases", () => {
-  expect(true).toBeTruthy();
-});
+  let outputs = layer.generateOutputs(inputs);
+  outputs.map((val) => Math.round(val * 10) / 10);
 
-test("should feed foward", () => {
-  let prevInputs = [{ value: 1, error: 0 }];
-  let layer = new Layer(1, prevInputs.length, "relu", "relu_d");
-
-  layer.weights = [[0.5]];
-  layer.biases[0] = 1;
-  layer.feedForward(prevInputs);
-
-  expect(layer.nodes[0].value).toBe(1.5);
-});
-
-test("should back propogate", () => {
-  expect(true).toBeTruthy();
+  expect(outputs.matrix).toMatchObject([[0.7]]);
 });
