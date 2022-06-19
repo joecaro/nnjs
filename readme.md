@@ -12,7 +12,7 @@ let nn = new NN(5, 5);
 
 Instantiate New Neural Network
 
-(# of input nodes, # of output nodes, loss function)
+_args_: (# of input nodes, # of output nodes, loss function)
 
 ---
 
@@ -25,15 +25,44 @@ nn.addHiddenLayer(10, "relu");
 
 ---
 
-_Feed Forward_
+_Predict_
 
 ```js
-nn.feedForward([1, 2, 3, 4, 5], [1, 0, 1, 1, 0]);
+nn.predict([1, 0]); // -> [0]
 ```
 
-Feed forward. Calculates loss and set currnet error.
+predict. predicts values for one array of inputs. returns array of outputs.
 
-(inputs, expected outputs)
+_args_: (inputs)
+
+---
+
+_Train_
+
+```js
+let inputs = [
+  [1, 0],
+  [0, 1],
+  [1, 1],
+  [0, 0],
+];
+let expectedValues = [[1], [1], [0], [0]];
+let errors = nn.train([...inputs], [...expectedValues]);
+```
+
+train. takes in "batch" or input arrays (number[][]) and "batch" of expected values (number[][])
+
+length of input arrays _must_ match # of input nodes
+length of expected value array _must_ match # of output nodes
+
+returns array of errors - [errorInput0, ... errorInputN]
+
+default options = {
+logBatchError: false,
+logResults: true,
+}
+
+_args_: (inputs, targets, options?, batchSize = 10)
 
 ---
 
@@ -43,10 +72,22 @@ _Log Current State_
 nn.log();
 //logs
 // -----
-// layers:
-//   Input: 5
-//   Hidden Layer 1: 10
-//   Hidden Layer 2: 10
-//   Output: 5
+// Layers:
+//  Input: 2
+//  Hidden Layer1:
+//    Nodes: 5
+//    Activation Function: sigmoid
+//  Output:
+//    Nodes: 1
+//    Activation Function: sigmoid
+// -----
+// Other
+//  Learning Rate: 0.1
 // -----
 ```
+
+Logs current state of network. Pass true to log out per layer weights.
+
+_args_: (verbose?)
+
+---
