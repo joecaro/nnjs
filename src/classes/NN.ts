@@ -4,7 +4,6 @@ import activationFunctions, {
 } from "../functions/activationFunctions";
 import lossFunctionsType, { lossFunctions } from "../functions/lossFunctions";
 import ActivationFunction from "../types/ActivationFunction";
-import LayerTypes from "../types/LayerTypes";
 import LossFunction from "../types/LossFunction";
 import Layer from "./Layer/Layer";
 import Matrix from "./Matrix/Matrix";
@@ -95,24 +94,10 @@ export class NN {
       }
     });
 
-    // // generate hidden outputs
-    // let hidden = Matrix.multiply(this.weights_ih, inputs);
-    // hidden.add(this.bias_h);
-    // hidden.map(this.activationFunction);
-
-    // //generate outputs
-    // let outputs = Matrix.multiply(this.weights_ho, hidden);
-    // outputs.add(this.bias_o);
-    // outputs.map(this.activationFunction);
-
     return outputs[outputs.length - 1].toArray();
   }
 
-  train(input_array: number[][], target_array: number[][]) {
-    // let weights_ho_deltas_queue: Matrix[] = [];
-    // let weights_ih_deltas_queue: Matrix[] = [];
-    // let bias_o_deltas_queue: Matrix[] = [];
-    // let bias_h_deltas_queue: Matrix[] = [];
+  backPropogate(input_array: number[][], target_array: number[][]) {
     let weights_deltas_queue: Matrix[][] = new Array(this.layers.length)
       .fill(0)
       .map(() => []);
@@ -125,16 +110,6 @@ export class NN {
     input_array.forEach((arr, inputIdx) => {
       //PREDICT
       let inputs = Matrix.fromArray(arr);
-
-      // // generate hidden outputs
-      // let hidden_outputs = Matrix.multiply(this.weights_ih, inputs);
-      // hidden_outputs.add(this.bias_h);
-      // hidden_outputs.map(this.activationFunction);
-
-      // //generate outputs
-      // let outputs = Matrix.multiply(this.weights_ho, hidden_outputs);
-      // outputs.add(this.bias_o);
-      // outputs.map(this.activationFunction);
 
       let outputs: Matrix[] = [];
 
@@ -245,52 +220,6 @@ export class NN {
           bias_deltas_queue[i].push(layer_gradients);
         }
       }
-
-      // // calculate error of outputs
-
-      // let output_errors = Matrix.subtract(targets, outputs);
-
-      // errors.add(output_errors);
-
-      // // calculate gradients
-      // let output_gradients = Matrix.map(
-      //   outputs,
-      //   this.activationFunctionDerivative
-      // );
-      // output_gradients.multiply(output_errors);
-      // output_gradients.multNumber(this.learning_rate);
-
-      // // Calculate weight adjustments
-      // let hidden_transposed = Matrix.transpose(hidden_outputs);
-      // let weights_ho_deltas = Matrix.multiply(
-      //   output_gradients,
-      //   hidden_transposed
-      // );
-
-      // // calculate hidden layer errors
-      // let weights_ho_transposed = Matrix.transpose(this.weights_ho);
-      // let hidden_erros = Matrix.multiply(weights_ho_transposed, output_errors);
-
-      // // calculate hidden gradients
-      // let hidden_gradients = Matrix.map(
-      //   hidden_outputs,
-      //   this.activationFunctionDerivative
-      // );
-      // hidden_gradients.multiply(hidden_erros);
-      // hidden_gradients.multNumber(this.learning_rate);
-
-      // // calculate hidden weight adjustments
-      // let inputs_transposed = Matrix.transpose(inputs);
-      // let weights_ih_deltas = Matrix.multiply(
-      //   hidden_gradients,
-      //   inputs_transposed
-      // );
-
-      // // add deltas to queues
-      // weights_ho_deltas_queue.push(weights_ho_deltas);
-      // weights_ih_deltas_queue.push(weights_ih_deltas);
-      // bias_o_deltas_queue.push(output_gradients);
-      // bias_h_deltas_queue.push(hidden_gradients);
     });
 
     // create adjustment matrices and process queues
@@ -313,60 +242,59 @@ export class NN {
       layer.updateBiases(bias_deltas[idx]);
     });
 
-    // //WHO
-    // let weights_ho_deltas = new Matrix(
-    //   this.weights_ho.rows,
-    //   this.weights_ho.columns
-    // );
-
-    // while (weights_ho_deltas_queue.length > 0) {
-    //   let workingMatrix = weights_ho_deltas_queue.pop() as Matrix;
-
-    //   weights_ho_deltas.add(workingMatrix);
-    // }
-    // //WIH
-    // let weights_ih_deltas = new Matrix(
-    //   this.weights_ih.rows,
-    //   this.weights_ih.columns
-    // );
-
-    // while (weights_ih_deltas_queue.length > 0) {
-    //   let workingMatrix = weights_ih_deltas_queue.pop() as Matrix;
-
-    //   weights_ih_deltas.add(workingMatrix);
-    // }
-
-    // //BO
-    // let bias_o_deltas = new Matrix(this.bias_o.rows, this.bias_o.columns);
-
-    // while (bias_o_deltas_queue.length > 0) {
-    //   let workingMatrix = bias_o_deltas_queue.pop() as Matrix;
-
-    //   bias_o_deltas.add(workingMatrix);
-    // }
-
-    // //BH
-    // let bias_h_deltas = new Matrix(this.bias_h.rows, this.bias_h.columns);
-
-    // while (bias_h_deltas_queue.length > 0) {
-    //   let workingMatrix = bias_h_deltas_queue.pop() as Matrix;
-    //   bias_h_deltas.add(workingMatrix);
-    // }
-
-    // //adjust the weights using the adjustments
-    // this.weights_ho.add(weights_ho_deltas);
-    // this.weights_ih.add(weights_ih_deltas);
-    // // biases need to be adjusted by just the gradients
-    // this.bias_o.add(bias_o_deltas);
-    // this.bias_h.add(bias_h_deltas);
-
-    // outputs.print();
-    // targets.print();
     errors.divNumber(input_array.length);
-    // errors.print();
 
     return errors;
   }
+
+  train(
+    inputs: number[][],
+    targets: number[][],
+    options: Options = defaultOptions,
+    batchSize: number = 1
+  ) {
+    if (inputs.length === 0 || targets.length === 0)
+      throw Error("ERROR Train - provided inputs or targets were empty");
+    if (inputs.length !== targets.length)
+      throw Error(
+        "ERROR Train - number of input and target arrays do not match "
+      );
+
+    if (
+      inputs[0].length !== this.numberOfInputs ||
+      targets[0].length !== this.numberOfOutputs
+    )
+      throw Error(
+        "ERROR Train - number of inputs and targets do not match number of inputs or outputs set for neural network"
+      );
+
+    let firstInputs = inputs[0];
+    let firstTargets = targets[0];
+
+    let before_prediction = this.predict(firstInputs); // get inital prediction
+
+    while (inputs.length > 0) {
+      let batch_inputs = inputs.splice(0, batchSize);
+      let batch_targets = targets.splice(0, batchSize);
+      let error = this.backPropogate(batch_inputs, batch_targets);
+
+      if (options.logBatchError) error.print();
+    }
+
+    let after_prediction = this.predict(firstInputs); // get prediction after training
+
+    if (options.logResults) {
+      console.log(`Prediction before training: ${round(before_prediction[0])}`);
+      console.log(`Prediction after training: ${round(after_prediction[0])}`);
+      console.log(`Target: ${firstTargets}`);
+      console.log("\nERROR AFTER TRAINING:");
+      console.log(this.backPropogate([firstInputs], [firstTargets]).matrix);
+    }
+  }
+}
+
+function round(num: number) {
+  return Math.round(num * 100) / 100;
 }
 
 function averageMatrices(matrixQueue: Matrix[]) {
@@ -379,3 +307,13 @@ function averageMatrices(matrixQueue: Matrix[]) {
 
   return averaged_matrix;
 }
+
+interface Options {
+  logBatchError: boolean;
+  logResults: boolean;
+}
+
+let defaultOptions: Options = {
+  logBatchError: false,
+  logResults: true,
+};
