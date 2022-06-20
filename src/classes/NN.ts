@@ -1,9 +1,9 @@
-import logWithStyle from "../../lib/LogWithStyle";
 import activationFunctions, {
   activationFunctionDerivatives,
   activationFunctionsType,
 } from "../functions/activationFunctions";
 import lossFunctionsType, { lossFunctions } from "../functions/lossFunctions";
+import logWithStyle from "../lib/logWithStyle";
 import ActivationFunction from "../types/ActivationFunction";
 import LossFunction from "../types/LossFunction";
 import Layer from "./Layer/Layer";
