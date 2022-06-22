@@ -103,7 +103,11 @@ export class NN {
     return outputs;
   }
 
-  backPropogate(input_array: number[][], target_array: number[][]) {
+  backPropogate(
+    input_array: number[][],
+    target_array: number[][],
+    returnType: "object" | "class" = "object"
+  ) {
     let weights_deltas_queue: Matrix[][] = new Array(this.layers.length)
       .fill(0)
       .map(() => []);
@@ -240,7 +244,7 @@ export class NN {
 
     errors_matrix.divNumber(input_array.length);
 
-    return errors_matrix;
+    return returnType === "class" ? errors_matrix : errors_matrix.toArray();
   }
 
   train(
@@ -249,6 +253,7 @@ export class NN {
     options: Options = defaultOptions,
     batchSize: number = 10
   ) {
+    //VALIDATE INPUTS AND TARGETS
     if (inputs.length === 0 || targets.length === 0)
       throw Error("ERROR Train - provided inputs or targets were empty");
     if (inputs.length !== targets.length)
@@ -272,7 +277,11 @@ export class NN {
     while (inputs.length > 0) {
       let batch_inputs = inputs.splice(0, batchSize);
       let batch_targets = targets.splice(0, batchSize);
-      let error = this.backPropogate(batch_inputs, batch_targets);
+      let error = this.backPropogate(
+        batch_inputs,
+        batch_targets,
+        "class"
+      ) as Matrix;
 
       if (options.logBatchError) error.print();
     }
@@ -292,7 +301,7 @@ export class NN {
       );
       console.log(`Target: ${firstTargets}`);
       console.log("\nERROR AFTER TRAINING:");
-      console.log(this.backPropogate([firstInputs], [firstTargets]).matrix);
+      console.log(this.backPropogate([firstInputs], [firstTargets]));
     }
   }
 
