@@ -15,15 +15,14 @@ export const lossFunctions: lossFunctionsType = {
 };
 
 export const lossFunctionDerivatives: LossFunctionDerivateType = {
-  mse: (output: number, expectedValue: number) => {
-    return 2 * (output - expectedValue);
+  mse: (error: number) => {
+    return 2 * error;
   },
-  mae: (output: number, expectedValue: number) => {
-    if (output > expectedValue) return 1;
+  mae: (error: number) => {
+    if (error >= 0) return 1;
     else return -1;
   },
-  lcl: (output: number, expectedValue: number) =>
-    Math.tanh(output - expectedValue),
+  lcl: (error: number) => Math.tanh(error),
 };
 
 export type lossFunctionsType = {
@@ -33,9 +32,9 @@ export type lossFunctionsType = {
 };
 
 export type LossFunctionDerivateType = {
-  mse: (output: number, expectedValue: number) => number;
-  mae: (output: number, expectedValue: number) => number;
-  lcl: (output: number, expectedValue: number) => number;
+  mse: (error: number) => number;
+  mae: (error: number) => number;
+  lcl: (error: number) => number;
 };
 
 export default lossFunctionsType;

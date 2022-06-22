@@ -2,10 +2,13 @@ import activationFunctions, {
   activationFunctionDerivatives,
   activationFunctionsType,
 } from "../functions/activationFunctions";
-import lossFunctionsType, { lossFunctions } from "../functions/lossFunctions";
+import lossFunctionsType, {
+  lossFunctionDerivatives,
+  lossFunctions,
+} from "../functions/lossFunctions";
 import logWithStyle from "../lib/logWithStyle";
 import ActivationFunction from "../types/ActivationFunction";
-import LossFunction from "../types/LossFunction";
+import LossFunction, { LossFunctionDerivative } from "../types/LossFunction";
 import Layer from "./Layer/Layer";
 import Matrix from "./Matrix/Matrix";
 
@@ -16,6 +19,7 @@ export class NN {
     activationFunctionDerivatives.sigmoid;
   lossFunctions = lossFunctions;
   lossFunction: LossFunction = lossFunctions.mse;
+  lossFunctionDerivative: LossFunctionDerivative = lossFunctionDerivatives.mse;
 
   layers: Layer[] = [];
 
@@ -41,6 +45,7 @@ export class NN {
   }
   setLossFunction(lossFunction: keyof lossFunctionsType = "mse") {
     this.lossFunction = lossFunctions[lossFunction];
+    this.lossFunctionDerivative = lossFunctionDerivatives[lossFunction];
   }
   setActivationFunction(activationFunction: keyof activationFunctionsType) {
     this.activationFunction = activationFunctions[activationFunction];
@@ -128,13 +133,14 @@ export class NN {
           );
 
           //add errors to lists to handle back prop
-          loop_errors.unshift(errors_matrix);
+          loop_errors.unshift(layer_errors);
           errors_matrix.add(layer_errors);
 
           //CALCULATE GRADIENTS
           let layer_gradients = layer.generateGradients(
             outputs[outputs.length - 1]
           );
+          // Matrix.map(layer_errors, (v) => this.lossFunctionDerivative());
           layer_gradients.multiply(layer_errors);
           layer_gradients.multNumber(this.learning_rate);
 
@@ -276,11 +282,13 @@ export class NN {
     if (options.logResults) {
       console.log(
         `Prediction before training: ${round(
-          before_prediction[0].matrix[0][0]
+          before_prediction[before_prediction.length - 1].matrix[0][0]
         )}`
       );
       console.log(
-        `Prediction after training: ${round(after_prediction[0].matrix[0][0])}`
+        `Prediction after training: ${round(
+          after_prediction[after_prediction.length - 1].matrix[0][0]
+        )}`
       );
       console.log(`Target: ${firstTargets}`);
       console.log("\nERROR AFTER TRAINING:");
