@@ -95,7 +95,7 @@ export class NN {
       }
     });
 
-    return outputs[outputs.length - 1].toArray();
+    return outputs;
   }
 
   backPropogate(input_array: number[][], target_array: number[][]) {
@@ -106,24 +106,11 @@ export class NN {
       .fill(0)
       .map(() => []);
 
-    let errors = new Matrix(target_array[0].length, 1);
+    let errors_matrix = new Matrix(target_array[0].length, 1);
 
     input_array.forEach((arr, inputIdx) => {
-      //PREDICT
       let inputs = Matrix.fromArray(arr);
-
-      let outputs: Matrix[] = [];
-
-      this.layers.forEach((layer, idx) => {
-        if (idx === 0) {
-          let layer_outputs = layer.generateOutputs(inputs);
-          outputs.push(layer_outputs);
-        } else {
-          let layer_outputs = layer.generateOutputs(outputs[idx - 1]);
-          outputs.push(layer_outputs);
-        }
-      });
-      //PREDICT
+      let outputs = this.predict(arr);
 
       let loop_errors: Matrix[] = [];
       let targets = Matrix.fromArray(target_array[inputIdx]);
@@ -141,8 +128,8 @@ export class NN {
           );
 
           //add errors to lists to handle back prop
-          loop_errors.unshift(errors);
-          errors.add(layer_errors);
+          loop_errors.unshift(errors_matrix);
+          errors_matrix.add(layer_errors);
 
           //CALCULATE GRADIENTS
           let layer_gradients = layer.generateGradients(
@@ -245,9 +232,9 @@ export class NN {
       layer.updateBiases(bias_deltas[idx]);
     });
 
-    errors.divNumber(input_array.length);
+    errors_matrix.divNumber(input_array.length);
 
-    return errors;
+    return errors_matrix;
   }
 
   train(
@@ -287,8 +274,14 @@ export class NN {
     let after_prediction = this.predict(firstInputs); // get prediction after training
 
     if (options.logResults) {
-      console.log(`Prediction before training: ${round(before_prediction[0])}`);
-      console.log(`Prediction after training: ${round(after_prediction[0])}`);
+      console.log(
+        `Prediction before training: ${round(
+          before_prediction[0].matrix[0][0]
+        )}`
+      );
+      console.log(
+        `Prediction after training: ${round(after_prediction[0].matrix[0][0])}`
+      );
       console.log(`Target: ${firstTargets}`);
       console.log("\nERROR AFTER TRAINING:");
       console.log(this.backPropogate([firstInputs], [firstTargets]).matrix);
