@@ -139,6 +139,8 @@ export class NN {
             targets,
             outputs[outputs.length - 1]
           );
+
+          //add errors to lists to handle back prop
           loop_errors.unshift(errors);
           errors.add(layer_errors);
 
