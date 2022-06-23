@@ -6,6 +6,12 @@ const activationFunctions: activationFunctionsType = {
   tanh: (value: number) => 2 / (1 + Math.pow(Math.E, -2 * value) + 1),
 };
 
+export const activationFunctionStrings = {
+  relu: "(value) => Math.max(0, value)",
+  sigmoid: "(value) => 1 / (1 + Math.pow(Math.E, -value))",
+  tanh: "(value) => 2 / (1 + Math.pow(Math.E, -2 * value) + 1)",
+};
+
 export const activationFunctionDerivatives: activationFunctionsDerivativeType =
   {
     relu: (value: number) => {

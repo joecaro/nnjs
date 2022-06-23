@@ -1,5 +1,6 @@
 import activationFunctions, {
   activationFunctionDerivatives,
+  activationFunctionStrings,
   activationFunctionsType,
 } from "../functions/activationFunctions";
 import lossFunctionsType, {
@@ -314,12 +315,16 @@ export class NN {
       if (layer.type === "hidden") {
         logWithStyle(` Hidden Layer${idx + 1}:`, "subhead");
         console.log(
-          `   Nodes: ${layer.numberOfNodes}\n   Activation Function: ${layer.activationFunction.name}`
+          `   Nodes: ${layer.numberOfNodes}\n   Activation Function: ${
+            activationFunctions[layer.activationFunction]
+          }`
         );
       } else {
         logWithStyle(` Output:`, "subhead");
         console.log(
-          `   Nodes: ${layer.numberOfNodes}\n   Activation Function: ${layer.activationFunction.name}`
+          `   Nodes: ${layer.numberOfNodes}\n   Activation Function: ${
+            activationFunctions[layer.activationFunction]
+          }`
         );
       }
     });
@@ -342,9 +347,15 @@ export class NN {
   }
 
   toFunction() {
-    let functions = "";
     let log = "";
     log += "function predict(inputs) {\n";
+    log += "  activationFunctions = [\n";
+    this.layers.forEach(
+      (layer) =>
+        (log += `   ${activationFunctionStrings[layer.activationFunction]},\n`)
+    );
+    log += "  ];\n\n";
+
     log +=
       "  function map(a, func) {\n   for (let i = 0; i < a.length; i++) {\n      for (let j = 0; j < a[0].length; j++) {\n        let val = a[i][j];\n        a[i][j] = func(val, i);\n    }\n }\n  }\n";
     log += "  let layers = [\n";
@@ -363,6 +374,7 @@ export class NN {
     log += "\n";
     log += "    map(matrix, (v) => 1 / (1 + Math.pow(Math.E, -v)));\n";
     log += "\n";
+    log += "      outputs.push(matrix);\n";
     log += "    });\n";
     log += "        return outputs[outputs.length - 1];\n";
     log += "}\n";

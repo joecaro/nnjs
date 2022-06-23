@@ -1,4 +1,3 @@
-import ActivationFunction from "../../types/ActivationFunction";
 import activationFunctions, {
   activationFunctionDerivatives,
   activationFunctionsType,
@@ -12,8 +11,7 @@ export default class Layer {
   type: string;
   weights: Matrix;
   biases: Matrix;
-  activationFunction: ActivationFunction;
-  activationFunctionDerivative: ActivationFunction;
+  activationFunction: keyof activationFunctionsType;
 
   constructor(
     numberOfNodes: number,
@@ -28,9 +26,7 @@ export default class Layer {
     this.weights = new Matrix(numberOfNodes, numberOfInputs);
     this.biases = new Matrix(numberOfNodes, 1);
 
-    this.activationFunction = activationFunctions[activationFunction];
-    this.activationFunctionDerivative =
-      activationFunctionDerivatives[activationFunction];
+    this.activationFunction = activationFunction;
   }
 
   randomize() {
@@ -41,13 +37,16 @@ export default class Layer {
   generateOutputs(inputs: Matrix) {
     let outputs = Matrix.multiply(this.weights, inputs);
     outputs.add(this.biases);
-    outputs.map(this.activationFunction);
+    outputs.map(activationFunctions[this.activationFunction]);
 
     return outputs;
   }
 
   generateGradients(outputs: Matrix) {
-    let gradients = Matrix.map(outputs, this.activationFunctionDerivative);
+    let gradients = Matrix.map(
+      outputs,
+      activationFunctionDerivatives[this.activationFunction]
+    );
     return gradients;
   }
 
