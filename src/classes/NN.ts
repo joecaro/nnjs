@@ -86,7 +86,7 @@ export class NN {
     this.layers[this.layers.length - 1].updateInputs(numberOfNodes);
   }
 
-  predict(input_array: number[]) {
+  predict(input_array: number[], returnType: "array" | "matrix" = "array") {
     let inputs = Matrix.fromArray(input_array);
 
     let outputs: Matrix[] = [];
@@ -101,7 +101,9 @@ export class NN {
       }
     });
 
-    return outputs;
+    return returnType === "matrix"
+      ? outputs
+      : outputs[outputs.length - 1].toArray();
   }
 
   backPropogate(
@@ -120,7 +122,7 @@ export class NN {
 
     input_array.forEach((arr, inputIdx) => {
       let inputs = Matrix.fromArray(arr);
-      let outputs = this.predict(arr);
+      let outputs = this.predict(arr, "matrix") as Matrix[];
 
       let loop_errors: Matrix[] = [];
       let targets = Matrix.fromArray(target_array[inputIdx]);
@@ -290,17 +292,12 @@ export class NN {
     let after_prediction = this.predict(firstInputs); // get prediction after training
 
     if (options.logResults) {
-      console.log(
-        `Prediction before training: ${round(
-          before_prediction[before_prediction.length - 1].matrix[0][0]
-        )}`
-      );
-      console.log(
-        `Prediction after training: ${round(
-          after_prediction[after_prediction.length - 1].matrix[0][0]
-        )}`
-      );
-      console.log(`Target: ${firstTargets}`);
+      console.log(`Prediction before training:`);
+      console.log(before_prediction);
+      console.log(`Prediction after training:`);
+      console.log(after_prediction);
+      console.log(`Target:`);
+      console.log(firstTargets);
       console.log("\nERROR AFTER TRAINING:");
       console.log(this.backPropogate([firstInputs], [firstTargets]));
     }
