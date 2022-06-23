@@ -141,6 +141,15 @@ export default class Matrix {
   print() {
     console.table(this.matrix);
   }
+
+  getLog() {
+    let log = `[`;
+    this.matrix.forEach((arr) => {
+      log += `\n[${arr}],`;
+    });
+    log += `\n]`;
+    return log;
+  }
 }
 
 function checkMatricesValidStructure(matrix1: number[][], matrix2: number[][]) {

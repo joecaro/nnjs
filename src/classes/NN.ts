@@ -332,13 +332,64 @@ export class NN {
       this.layers.forEach((layer, idx) => {
         if (layer.type === "hidden") {
           console.log(` Hidden Layer${idx + 1}`);
-          console.table(layer.weights.matrix);
+          console.log(layer.getWeightLog());
         } else {
           console.log(` Output:`);
-          console.table(layer.weights.matrix);
+          console.log(layer.getWeightLog());
         }
       });
     }
+  }
+
+  toFunction() {
+    console.log(`
+function predict(inputs) {
+  function map(a, func) {
+    for (let i = 0; i < a.length; i++) {
+      for (let j = 0; j < a[0].length; j++) {
+        let val = a[i][j];
+        a[i][j] = func(val, i);
+      }
+    }
+  }
+
+let layers = [
+    ${this.layers.map((layer) => layer.getWeightLog())}
+  ]
+let biases = [
+    ${this.layers.map((layer) => `[${layer.biases.matrix}]\n`)}
+  ]
+let outputs = [];
+
+ layers.forEach((layer, idx) => {
+    let matrix = new Array(layer.length)
+      .fill(0)
+      .map((row) => new Array(1).fill(0).map((col) => 0));
+
+    for (let i = 0; i < matrix.length; i++) {
+      sum = 0;
+      layer[i].forEach((weight) => {
+        if (outputs.length > 0) {
+          outputs[outputs.length - 1].forEach(
+            (input) => (sum += weight * input)
+          );
+        } else {
+          inputs.forEach((input) => (sum += weight * input));
+        }
+      });
+      matrix[i][0] = sum;
+    }
+
+    map(matrix, (v, i) => v + biases[idx][i]);
+
+    map(matrix, (v) => 1 / (1 + Math.pow(Math.E, -v)));
+
+
+  outputs.push(matrix);
+  });
+
+    return outputs[outputs.length - 1];
+}`);
   }
 }
 

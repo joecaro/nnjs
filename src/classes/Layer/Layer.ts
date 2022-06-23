@@ -68,4 +68,8 @@ export default class Layer {
 
     this.weights = new Matrix(this.numberOfNodes, numberOfInputs);
   }
+
+  getWeightLog() {
+    return this.weights.getLog();
+  }
 }
